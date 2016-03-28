@@ -108,4 +108,4 @@ echo 'Remove bar bucket and list all buckets with s3cmd:'
 s3cmd --config '/tmp/configuration' rb 's3://bar'
 s3cmd --config '/tmp/configuration' ls
 
-docker kill riak-cs && docker rm riak-cs
+docker kill riak-cs || docker rm riak-cs || true
