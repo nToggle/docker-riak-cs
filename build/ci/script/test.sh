@@ -40,7 +40,7 @@ docker run \
     --env 'RIAK_CS_BUCKETS=foo,bar,baz' \
     --name 'riak-cs' \
     --publish '8080:8080' \
-    ntoggle/riak-cs:$IMAGE_VERSION > /dev/null
+    quay.io/ntoggle/riak-cs:$IMAGE_VERSION > /dev/null
 echo ' OK!'
 
 check_startup
@@ -93,16 +93,15 @@ echo 'Listing buckets with s3cmd:'
 s3cmd --config '/tmp/configuration' ls
 
 echo 'Putting file into foo bucket and list it with s3cmd:'
-touch 'file'
-s3cmd --config '/tmp/configuration' put 'file' 's3://foo'
+s3cmd --config '/tmp/configuration' put 'README.md' 's3://foo'
 s3cmd --config '/tmp/configuration' ls 's3://foo'
 
 echo 'Copying file from foo bucket into bar bucket and list it with s3cmd:'
-s3cmd --config '/tmp/configuration' cp 's3://foo/file' 's3://bar/file'
+s3cmd --config '/tmp/configuration' cp 's3://foo/README.md' 's3://bar/README.md'
 s3cmd --config '/tmp/configuration' ls 's3://bar'
 
 echo 'Remove file from bar bucket and list it with s3cmd:'
-s3cmd --config '/tmp/configuration' del 's3://bar/file'
+s3cmd --config '/tmp/configuration' del 's3://bar/README.md'
 s3cmd --config '/tmp/configuration' ls 's3://bar'
 
 echo 'Remove bar bucket and list all buckets with s3cmd:'

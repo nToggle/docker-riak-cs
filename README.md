@@ -12,13 +12,13 @@ Pull or build the image yourself and run it. When the container gets started it 
 
 ```sh
 # Build
-docker build --tag "ntoggle/riak-cs:$IMAGE_VERSION" "./src"
+docker build --tag "quay.io/ntoggle/riak-cs:$IMAGE_VERSION" "./src"
 
 # Or pull
-docker pull 'ntoggle/riak-cs'
+docker pull 'quay.io/ntoggle/riak-cs:$IMAGE_VERSION'
  
 # Run and create three buckets
-docker run -dP -e 'RIAK_CS_BUCKETS=foo,bar,baz' -p '8080:8080' --name 'riak-cs' quay.io/ntoggle/riak-cs
+docker run -dP -e 'RIAK_CS_BUCKETS=foo,bar,baz' -p '8080:8080' --name 'riak-cs' quay.io/ntoggle/riak-cs:$IMAGE_VERSION
 
 # Usage for s3cmd
 
