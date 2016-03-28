@@ -12,21 +12,21 @@ Pull or build the image yourself and run it. When the container gets started it 
 
 ```sh
 # Build
-docker build -t 'ianbytchek/riak-cs' .
+docker build --tag "ntoggle/riak-cs:$IMAGE_VERSION" "./src"
 
 # Or pull
-docker pull 'ianbytchek/riak-cs'
+docker pull 'ntoggle/riak-cs'
  
 # Run and create three buckets
-docker run -dP -e 'RIAK_CS_BUCKETS=foo,bar,baz' -p '8080:8080' --name 'riak-cs' ianbytchek/riak-cs
+docker run -dP -e 'RIAK_CS_BUCKETS=foo,bar,baz' -p '8080:8080' --name 'riak-cs' quay.io/ntoggle/riak-cs
 
 # Usage for s3cmd
 
 cat <<EOF >~/.s3cfg.riak_cs
 [default]
 access_key = <RIAK_CS_KEY_ACCESS>
-host_base = s3.amazonaws.dev
-host_bucket = %(bucket)s.s3.amazonaws.dev
+host_base = s3.amazonaws.com
+host_bucket = %(bucket)s.s3.amazonaws.com
 proxy_host = 127.0.0.1
 proxy_port = 8080
 secret_key = <RIAK_CS_KEY_SECRET>
@@ -69,7 +69,7 @@ frontend https
 backend riak_cs
     balance leastconn
     option httpclose
-    reqirep ^Host:\ (.+)?(s3).*(\.amazonaws\.dev)$ Host:\ \1\2\3
+    reqirep ^Host:\ (.+)?(s3).*(\.amazonaws\.com)$ Host:\ \1\2\3
     server node01 <RIAK_CS_IP_PORT>
 ```
 

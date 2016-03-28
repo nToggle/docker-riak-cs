@@ -32,7 +32,7 @@ function riak_cs_create_bucket(){
     local status_code=$(curl \
         --header "Authorization: AWS ${key_access}:${signature}" \
         --header "Date: ${date}" \
-        --header "Host: ${bucket}.s3.amazonaws.dev" \
+        --header "Host: ${bucket}.s3.amazonaws.com" \
         --insecure \
         --output /dev/null \
         --request GET \
@@ -50,7 +50,7 @@ function riak_cs_create_bucket(){
             --request PUT \
             --header "Authorization: AWS ${key_access}:${signature}" \
             --header "Date: ${date}" \
-            --header "Host: ${bucket}.s3.amazonaws.dev" \
+            --header "Host: ${bucket}.s3.amazonaws.com" \
             --output /dev/null \
             --write-out '%{http_code}' \
             "http://127.0.0.1:8080")
@@ -135,7 +135,7 @@ function riak_cs_create_admin(){
                 --retry 10 \
                 --retry-delay 5 \
                 --silent \
-                --data '{"email":"admin@s3.amazonaws.dev", "name":"admin"}')
+                --data '{"email":"admin@s3.amazonaws.com", "name":"admin"}')
 
             local key_access=$(echo -n $credentials | pcregrep -o '"key_id"\h*:\h*"\K([^"]*)')
             local key_secret=$(echo -n $credentials | pcregrep -o '"key_secret"\h*:\h*"\K([^"]*)')
@@ -205,6 +205,7 @@ function riak_cs_create_buckets(){
         IFS=$','; for bucket in $RIAK_CS_BUCKETS; do
             riak_cs_create_bucket "${riak_cs_admin_key_access}" "${riak_cs_admin_key_secret}" "${bucket}"
         done
+        echo "Finished creating CS buckets"
     fi
 }
 

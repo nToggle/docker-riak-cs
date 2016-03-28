@@ -6,11 +6,7 @@ set -e
 trap 'echo "Error occured on line $LINENO." && exit 1' ERR
 
 # Authenticate with docker and push the latest image.
+source "./build/ci/script/version.sh"
 
-docker login \
-    --email $DOCKER_HUB_EMAIL \
-    --password $DOCKER_HUB_PASSWORD \
-    --username $DOCKER_HUB_USER
-
-docker push ianbytchek/riak-cs
-docker logout
+docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS quay.io
+docker push quay.io/ntoggle/riak-cs:$IMAGE_VERSION

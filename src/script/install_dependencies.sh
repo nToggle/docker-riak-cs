@@ -5,7 +5,6 @@ echo "Updating existing and installing required packages."
 # Update apt-get and install the necessary dependencies.
 
 apt-get -qq update
-apt-get -qq upgrade --yes
 apt-get -qq install --yes --no-install-recommends \
     adduser \
     curl \

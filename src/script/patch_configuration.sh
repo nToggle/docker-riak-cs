@@ -14,13 +14,14 @@ function riak_patch_config(){
 		[
 		    {riak_kv, [
 		        %% Storage_backend specifies the Erlang module defining the storage mechanism that will be used on this node.
-		        {add_paths, ["$(ls -d /usr/lib/riak-cs/lib/riak_cs-*)/ebin"]},
+		        {add_paths, ["/usr/lib/riak-cs/lib/riak_cs-2.1.0/ebin"]},
 		        {storage_backend, riak_cs_kv_multi_backend},
 		        {multi_backend_prefix_list, [{<<"0b:">>, be_blocks}]},
 		        {multi_backend_default, be_default},
 		        {multi_backend, [
 		            {be_default, riak_kv_eleveldb_backend, [
-		                {max_open_files, 30},
+		                {total_leveldb_mem_percent, 30},
+		                {max_open_files, 50},
 		                {data_root, "/var/lib/riak/leveldb"}
 		            ]},
 		            {be_blocks, riak_kv_bitcask_backend, [
@@ -28,6 +29,12 @@ function riak_patch_config(){
 		            ]}
 		        ]}
 		    ]},
+		    {riak_api, [
+                {pb, [
+                    {"127.0.0.1", 8087}
+                ]},
+                {pb_backlog, 128}
+            ]},
 		    {riak_core, [
 		        {default_bucket_props, [{allow_mult, true}]}
 		    ]}
@@ -52,8 +59,12 @@ function riak_cs_patch_config(){
 		        {anonymous_user_creation, true},
 		        %%{admin_key, null},
 		        %%{admin_secret, null},
-		        {cs_root_host, "s3.amazonaws.dev"},
+		        {auth_module, riak_cs_s3_auth},
+		        {rewrite_module, riak_cs_s3_rewrite },
+		        {cs_root_host, "s3.amazonaws.com"},
 		        {fold_objects_for_list_keys, true},
+		        {riak_ip, "127.0.0.1"},
+		        {riak_pb_port, 8087},
 		        {listener, {"0.0.0.0", 8080}}
 		    ]}
 		].
