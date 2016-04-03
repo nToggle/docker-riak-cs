@@ -113,87 +113,6 @@ function basho_service_restart() {
     "${commandName}" restart > /dev/null && echo " OK!"
 }
 
-function riak_cs_create_admin(){
-    local riakCsConfigPath='/etc/riak-cs/advanced.config'
-    local stanchionConfigPath='/etc/stanchion/advanced.config'
-
-    if grep --quiet '%%{admin_key, null}' "${riakCsConfigPath}" && grep --quiet '%%{admin_secret, null}' "${riakCsConfigPath}"; then
-        if [ -n "${RIAK_CS_KEY_ACCESS}" ] && [ -n "${RIAK_CS_KEY_SECRET}" ]; then
-            local key_access="${RIAK_CS_KEY_ACCESS}"
-            local key_secret="${RIAK_CS_KEY_SECRET}"
-        else
-
-            # Because we call this right after starting riak services, this sometimes fails with 500 status,
-            # probably because it needs some time to warm up. This allows several attempts with delays.
-
-            credentials=$(curl \
-                --connect-timeout 5 \
-                --fail \
-                --header 'Content-Type: application/json' \
-                --insecure \
-                --request POST 'http://127.0.0.1:8080/riak-cs/user' \
-                --retry 10 \
-                --retry-delay 5 \
-                --silent \
-                --data '{"email":"admin@s3.amazonaws.com", "name":"admin"}')
-
-            local key_access=$(echo -n $credentials | pcregrep -o '"key_id"\h*:\h*"\K([^"]*)')
-            local key_secret=$(echo -n $credentials | pcregrep -o '"key_secret"\h*:\h*"\K([^"]*)')
-
-            if [ -z "${key_access}" ] || [ -z "${key_secret}" ]; then
-                echo "Could not create admin user and retrieve credentials. Curl got response:"
-                echo "${credentials}"
-                exit 1
-            fi
-        fi
-
-        patchConfig "${riakCsConfigPath}" '\Q{anonymous_user_creation, true}\E' '{anonymous_user_creation, false}'
-        patchConfig "${riakCsConfigPath}" '\Q%%{admin_key, null}\E' '{admin_key, "'"${key_access}"'"}'
-        patchConfig "${riakCsConfigPath}" '\Q%%{admin_secret, null}\E' '{admin_secret, "'"${key_secret}"'"}'
-        patchConfig "${stanchionConfigPath}" '\Q%%{admin_key, null}\E' '{admin_key, "'"${key_access}"'"}'
-        patchConfig "${stanchionConfigPath}" '\Q%%{admin_secret, null}\E' '{admin_secret, "'"${key_secret}"'"}'
-
-        # Create admin credentials.
-
-        cat <<-EOL
-
-			############################################################
-
-			    Riak admin credentials, make note of them, otherwise you
-			    will not be able to access your files and data. Riak
-			    services will be restarted to take effect.
-
-			    Access key: ${key_access}
-			    Secret key: ${key_secret}
-
-			############################################################
-
-		EOL
-
-        basho_service_restart 'riak' 'Riak'
-        basho_service_restart 'stanchion' 'Stanchion'
-        basho_service_restart 'riak-cs' 'Riak CS'
-    else
-        local key_access=$(cat "${riakCsConfigPath}" | pcregrep -o '{admin_key,\h*"\K([^"]*)')
-        local key_secret=$(cat "${riakCsConfigPath}" | pcregrep -o '{admin_secret,\h*"\K([^"]*)')
-
-        cat <<-EOL
-
-			############################################################
-
-			    Admin user is already setup, you can view credentials
-			    at the beginning of this log.
-
-			############################################################
-
-		EOL
-    fi
-
-    # We still must export those two for creating buckets, which requires credentials for authentication.
-
-    riak_cs_admin_key_access="${key_access}"
-    riak_cs_admin_key_secret="${key_secret}"
-}
 
 function riak_cs_create_buckets(){
 
@@ -201,6 +120,8 @@ function riak_cs_create_buckets(){
 
     if [ -v RIAK_CS_BUCKETS ]; then
         echo "Creating Riak CS buckets."
+        riak_cs_admin_key_access=`cat /etc/stanchion/advanced.config | pcregrep -o 'admin_key, "\K(.{20})'`
+        riak_cs_admin_key_secret=`cat /etc/stanchion/advanced.config | pcregrep -o 'admin_secret, "\K(.{40})'`
 
         IFS=$','; for bucket in $RIAK_CS_BUCKETS; do
             riak_cs_create_bucket "${riak_cs_admin_key_access}" "${riak_cs_admin_key_secret}" "${bucket}"
@@ -209,10 +130,6 @@ function riak_cs_create_buckets(){
     fi
 }
 
-echo -n "Update data permissions in case it's mounted as volume…"
-chown -R riak:riak /var/lib/riak
-chmod 755 /var/lib/riak
-echo " OK!"
 
 # All services are stopped. Start them first.
 
@@ -222,7 +139,6 @@ basho_service_start 'riak-cs' 'Riak CS'
 
 # Apparently sometimes services need extra time to warm up.
 
-# Then create admin user and specified buckets.
+# Then create specified buckets.
 
-riak_cs_create_admin
 riak_cs_create_buckets

@@ -8,6 +8,7 @@ cd $(dirname $0)
 . configuration.sh
 . install_dependencies.sh
 . patch_configuration.sh
+. post-setup.sh
 
 echo -n 'Moving entrypoint scripts…'
 mkdir --parent '/entrypoint/configuration'

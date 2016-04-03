@@ -39,7 +39,7 @@ function riak_patch_config(){
 		        {default_bucket_props, [{allow_mult, true}]}
 		    ]}
 		].
-	EOL
+EOL
 
 	echo ' OK!'
 }
@@ -68,7 +68,7 @@ function riak_cs_patch_config(){
 		        {listener, {"0.0.0.0", 8080}}
 		    ]}
 		].
-	EOL
+EOL
 
     echo ' OK!'
 }
@@ -84,7 +84,7 @@ function stanchion_patch_config(){
 		        %%{admin_secret, null}
 		    ]}
 		].
-	EOL
+EOL
 
 	echo ' OK!'
 }
