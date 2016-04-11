@@ -14,6 +14,9 @@ apt-get -qq install --yes --no-install-recommends \
     sudo \
     supervisor
 
+RIAK_VERSION='2.1.1'
+RIAK_CS_VERSION='2.1.0'
+STANCHION_VERSION='2.1.0'
 
 echo "Downloading Riak:"
 curl -# -L -o "riak_${RIAK_VERSION}.deb" "http://s3.amazonaws.com/downloads.basho.com/riak/"$(echo $RIAK_VERSION | pcregrep -o "^\d+\.\d+")"/${RIAK_VERSION}/debian/7/riak_${RIAK_VERSION}-1_amd64.deb"

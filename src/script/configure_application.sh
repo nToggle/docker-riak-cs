@@ -13,6 +13,7 @@ function riak_cs_create_bucket(){
     local key_access=$1
     local key_secret=$2
     local bucket=$3
+    local retry=$4
 
     # We must use signed requests to make any calls to the service, this apparently isn't very easy. They are in great
     # detail explained in S3 documentation available at the address below. This also looks a little more confusing,
@@ -58,7 +59,14 @@ function riak_cs_create_bucket(){
         if [ "${status_code}" = '200' ]; then
             echo ' OK!'
         else
-            echo ' Failed!'
+            let retry="$retry - 1"
+            if [ "$retry" -gt "0" ]; then
+               echo 'Retrying after a second...'
+               sleep 1
+               riak_cs_create_bucket $1 $2 $3 $retry
+            else
+               echo ' Failed!'
+            fi
         fi
     fi
 }
@@ -76,7 +84,7 @@ function basho_service_start() {
     echo -n "Starting ${serviceName}…"
     "${commandName}" start
 
-    until (riak ping | grep "pong" > /dev/null) || ((++tries >= maxTries)) ; do
+    until (${commandName} ping | grep "pong" > /dev/null) || ((++tries >= maxTries)) ; do
         echo "Waiting for ${serviceName}…"
         sleep 1
     done
@@ -124,15 +132,13 @@ function riak_cs_create_buckets(){
         riak_cs_admin_key_secret=`cat /etc/stanchion/advanced.config | pcregrep -o 'admin_secret, "\K(.{40})'`
 
         IFS=$','; for bucket in $RIAK_CS_BUCKETS; do
-            riak_cs_create_bucket "${riak_cs_admin_key_access}" "${riak_cs_admin_key_secret}" "${bucket}"
+            riak_cs_create_bucket "${riak_cs_admin_key_access}" "${riak_cs_admin_key_secret}" "${bucket}" 10
         done
         echo "Finished creating CS buckets"
     fi
 }
 
-
 # All services are stopped. Start them first.
-
 basho_service_start 'riak' 'Riak'
 basho_service_start 'stanchion' 'Stanchion'
 basho_service_start 'riak-cs' 'Riak CS'
@@ -140,5 +146,4 @@ basho_service_start 'riak-cs' 'Riak CS'
 # Apparently sometimes services need extra time to warm up.
 
 # Then create specified buckets.
-
 riak_cs_create_buckets
