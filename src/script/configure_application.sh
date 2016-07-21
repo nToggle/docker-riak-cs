@@ -132,7 +132,7 @@ function riak_cs_create_buckets(){
         riak_cs_admin_key_secret=`cat /etc/stanchion/advanced.config | pcregrep -o 'admin_secret, "\K(.{40})'`
 
         IFS=$','; for bucket in $RIAK_CS_BUCKETS; do
-            riak_cs_create_bucket "${riak_cs_admin_key_access}" "${riak_cs_admin_key_secret}" "${bucket}" 10
+            riak_cs_create_bucket "${riak_cs_admin_key_access}" "${riak_cs_admin_key_secret}" "${bucket}" 30
         done
         echo "Finished creating CS buckets"
     fi
